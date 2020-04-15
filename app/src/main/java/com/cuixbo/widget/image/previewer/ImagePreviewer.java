@@ -49,7 +49,7 @@ public class ImagePreviewer extends AppCompatImageView implements GestureDetecto
     int originOffsetX, originOffsetY;
     float originScale;
     float mCurrentScale;
-    int mMaxScale = 8;
+    float mMaxScale = 8;
 
     public ImagePreviewer(Context context) {
         super(context);
@@ -111,6 +111,7 @@ public class ImagePreviewer extends AppCompatImageView implements GestureDetecto
      *
      */
     private float fraction;
+    private float scaleBefore;
 
     @Override
     protected void onDraw(Canvas canvas) {
@@ -119,7 +120,7 @@ public class ImagePreviewer extends AppCompatImageView implements GestureDetecto
          * 偏移系数（解决在缩放过程中，伴随的位移，使得动画效果更贴切）
          * 系数=已缩放了的scale/整体要缩放的scale 变化范围：[0,1]
          */
-        float fraction = 1F * (mMaxScale - mCurrentScale) / (mMaxScale - originScale);
+        float fraction = 1F * (scaleBefore - mCurrentScale) / (mMaxScale - originScale);
         Log.e("xbc", "mCurrentScale:" + mCurrentScale + ",fraction:" + fraction + ",scaleScrollX:" + scaleScrollX);
         // 画布偏移 = ScrolledX*fraction,ScrolledY*fraction  变化范围：[0,ScrolledX],[0,ScrolledY]
         canvas.translate(scaleScrollX * fraction, scaleScrollY * fraction);
@@ -282,11 +283,17 @@ public class ImagePreviewer extends AppCompatImageView implements GestureDetecto
             Log.e("xbc", "onDoubleTap:" + getScrollX() + "," + getScrollY());
             scaleScrollX = getScrollX();
             scaleScrollY = getScrollY();
+            scaleBefore = mCurrentScale;
             getScaleAnimator().reverse();
 //            mScroller.startScroll(-getScrollX(), -getScrollY(), getScrollX(), getScrollY());
             invalidate();
         } else {
             // todo 需要处理缩放过程中的，位置偏移(双击指定位置，以此为中心放大)
+            scaleScrollX = 0;
+            scaleScrollY = 0;
+//            scaleScrollX = (int) ((e.getX() - getWidth() / 2)*mCurrentScale);
+//            scaleScrollY = (int) ((e.getY() - getHeight() / 2)*mCurrentScale);
+            scaleBefore = mCurrentScale;
             getScaleAnimator().start();
         }
         return false;
