@@ -93,16 +93,19 @@ public class ImagePreviewer extends AppCompatImageView implements GestureDetecto
         originOffsetX = (getWidth() - mBitmap.getWidth()) / 2;
         originOffsetY = (getHeight() - mBitmap.getHeight()) / 2;
 
-        // 长图
 
         if (1.0F * mBitmap.getHeight() / mBitmap.getWidth() > 1.0F * getHeight() / getWidth()) {
+            // 长图
             originScale = 1.0F * getHeight() / mBitmap.getHeight();
         } else {
+            // 宽图
             originScale = 1.0F * getWidth() / mBitmap.getWidth();
         }
 
         mCurrentScale = originScale;
-        // 宽图
+
+        scaleCenterX = getWidth() / 2F;
+        scaleCenterY = getHeight() / 2F;
 
         dstRect = new Rect(0, 0, mWidth, mHeight * mBitmapHeight / mBitmapWidth);
     }
@@ -124,7 +127,7 @@ public class ImagePreviewer extends AppCompatImageView implements GestureDetecto
         Log.e("xbc", "mCurrentScale:" + mCurrentScale + ",fraction:" + fraction + ",scaleScrollX:" + scaleScrollX);
         // 画布偏移 = ScrolledX*fraction,ScrolledY*fraction  变化范围：[0,ScrolledX],[0,ScrolledY]
         canvas.translate(scaleScrollX * fraction, scaleScrollY * fraction);
-        canvas.scale(mCurrentScale, mCurrentScale, getWidth() / 2F, getHeight() / 2F);
+        canvas.scale(mCurrentScale, mCurrentScale, scaleCenterX, scaleCenterY);
         canvas.drawBitmap(mBitmap, originOffsetX, originOffsetY, mPaint);
     }
 
@@ -137,33 +140,6 @@ public class ImagePreviewer extends AppCompatImageView implements GestureDetecto
     @SuppressLint("ClickableViewAccessibility")
     @Override
     public boolean onTouchEvent(MotionEvent event) {
-//        Log.e("xbc", "onTouchEvent:");
-//        int x = (int) event.getX();
-//        int y = (int) event.getY();
-//        switch (event.getAction()) {
-//            case MotionEvent.ACTION_DOWN:
-//                downX = x;
-//                downY = y;
-//                break;
-//            case MotionEvent.ACTION_MOVE:
-//                dx = x - lastX;
-//                dy = y - lastY;
-//                offsetX = x - downX + lastOffsetX;
-//                offsetY = y - downY + lastOffsetY;
-//                Log.e("xbc", "onTouchEvent:" + dy + "," + dy + "," + offsetY);
-//                dstRect.offset(dx, dy);
-////                setTranslationY(moveY);
-//                break;
-//            case MotionEvent.ACTION_UP:
-//                lastOffsetX = offsetX;
-//                lastOffsetY = offsetY;
-//                break;
-//            default:
-//                break;
-//        }
-//        lastX = x;
-//        lastY = y;
-
         return mGestureDetector.onTouchEvent(event);
     }
 
@@ -185,17 +161,7 @@ public class ImagePreviewer extends AppCompatImageView implements GestureDetecto
         return scaleAnimator;
     }
 
-    @Override
-    public void computeScroll() {
-        super.computeScroll();
-        Log.e("xbc", "computeScroll:" + mScroller.computeScrollOffset() + "," + mScroller.getCurrX() + "," + mScroller.getCurrY());
-        if (mScroller.computeScrollOffset()) {
-            scrollTo(-mScroller.getCurrX(), -mScroller.getCurrY());
-            postInvalidate();
-        }
-    }
-
-    /************* OnGestureListener *************/
+    /************* OnGestureListener Start *************/
 
     @Override
     public boolean onDown(MotionEvent e) {
@@ -264,7 +230,9 @@ public class ImagePreviewer extends AppCompatImageView implements GestureDetecto
         return false;
     }
 
-    /************* OnDoubleTapListener  *************/
+    /************* OnGestureListener End *************/
+
+    /************* OnDoubleTapListener Start *************/
 
     @Override
     public boolean onSingleTapConfirmed(MotionEvent e) {
@@ -273,6 +241,7 @@ public class ImagePreviewer extends AppCompatImageView implements GestureDetecto
     }
 
     int scaleScrollX, scaleScrollY;
+    float scaleCenterX, scaleCenterY;
 
     @Override
     public boolean onDoubleTap(MotionEvent e) {
@@ -293,6 +262,13 @@ public class ImagePreviewer extends AppCompatImageView implements GestureDetecto
             scaleScrollY = 0;
 //            scaleScrollX = (int) ((e.getX() - getWidth() / 2)*mCurrentScale);
 //            scaleScrollY = (int) ((e.getY() - getHeight() / 2)*mCurrentScale);
+//
+//            int startX = (int) ((e.getX() - getWidth() / 2)) * (int) (mMaxScale - originScale);
+//            int startY = (int) ((e.getY() - getHeight() / 2)) * (int) (mMaxScale - originScale);
+//            mScroller.startScroll(getScrollX(), getScrollY(), -startX, -startY);
+//            invalidate();
+//            scaleCenterX = e.getX();
+//            scaleCenterY = e.getY();
             scaleBefore = mCurrentScale;
             getScaleAnimator().start();
         }
@@ -303,5 +279,17 @@ public class ImagePreviewer extends AppCompatImageView implements GestureDetecto
     public boolean onDoubleTapEvent(MotionEvent e) {
         Log.e("xbc", "onDoubleTapEvent");
         return false;
+    }
+
+    /************* OnDoubleTapListener End *************/
+
+    @Override
+    public void computeScroll() {
+        super.computeScroll();
+        Log.e("xbc", "computeScroll:" + mScroller.computeScrollOffset() + "," + mScroller.getCurrX() + "," + mScroller.getCurrY());
+        if (mScroller.computeScrollOffset()) {
+            scrollTo(-mScroller.getCurrX(), -mScroller.getCurrY());
+            postInvalidate();
+        }
     }
 }
