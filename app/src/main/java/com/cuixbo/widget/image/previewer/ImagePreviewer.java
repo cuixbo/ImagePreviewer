@@ -42,8 +42,8 @@ public class ImagePreviewer extends AppCompatImageView implements GestureDetecto
     Rect srcRect, dstRect;
     GestureDetector mGestureDetector;
 
-    //缩放动画
-    ObjectAnimator scaleAnimator;
+    // 缩放动画
+    ObjectAnimator mScaleAnimator;
     OverScroller mScroller;
 
     int originOffsetX, originOffsetY;
@@ -126,9 +126,10 @@ public class ImagePreviewer extends AppCompatImageView implements GestureDetecto
         float fraction = 1F * (scaleBefore - mCurrentScale) / (mMaxScale - originScale);
         Log.e("xbc", "mCurrentScale:" + mCurrentScale + ",fraction:" + fraction + ",scaleScrollX:" + scaleScrollX);
         // 画布偏移 = ScrolledX*fraction,ScrolledY*fraction  变化范围：[0,ScrolledX],[0,ScrolledY]
-        canvas.translate(scaleScrollX * fraction, scaleScrollY * fraction);
+//        canvas.translate(scaleScrollX * fraction, scaleScrollY * fraction);
         canvas.scale(mCurrentScale, mCurrentScale, scaleCenterX, scaleCenterY);
         canvas.drawBitmap(mBitmap, originOffsetX, originOffsetY, mPaint);
+        Log.e("xbc", "onDraw:" + getScrollX() + "," + getScrollY());
     }
 
     int downX, downY;
@@ -153,12 +154,11 @@ public class ImagePreviewer extends AppCompatImageView implements GestureDetecto
     }
 
     private ObjectAnimator getScaleAnimator() {
-        if (scaleAnimator == null) {
-            scaleAnimator = ObjectAnimator.ofFloat(this, "currentScale", 0f);
-//            scaleAnimator.setDuration(2000);
+        if (mScaleAnimator == null) {
+            mScaleAnimator = ObjectAnimator.ofFloat(this, "currentScale", 0f);
         }
-        scaleAnimator.setFloatValues(originScale, mMaxScale);
-        return scaleAnimator;
+        mScaleAnimator.setFloatValues(originScale, mMaxScale);
+        return mScaleAnimator;
     }
 
     /************* OnGestureListener Start *************/
@@ -225,7 +225,13 @@ public class ImagePreviewer extends AppCompatImageView implements GestureDetecto
         int minY = -maxDistanceY;
         int maxX = maxDistanceX;
         int maxY = maxDistanceY;
-        mScroller.fling(-getScrollX(), -getScrollY(), (int) velocityX, (int) velocityY, minX, maxX, minY, maxY, 100, 100);
+        mScroller.fling(
+                getScrollX(), getScrollY(),
+                (int) -velocityX, (int) -velocityY,
+                minX, maxX,
+                minY, maxY,
+                100, 100
+        );
         invalidate();
         return false;
     }
@@ -254,7 +260,7 @@ public class ImagePreviewer extends AppCompatImageView implements GestureDetecto
             scaleScrollY = getScrollY();
             scaleBefore = mCurrentScale;
             getScaleAnimator().reverse();
-//            mScroller.startScroll(-getScrollX(), -getScrollY(), getScrollX(), getScrollY());
+            mScroller.startScroll(getScrollX(), getScrollY(), -getScrollX(), -getScrollY());
             invalidate();
         } else {
             // todo 需要处理缩放过程中的，位置偏移(双击指定位置，以此为中心放大)
@@ -288,7 +294,7 @@ public class ImagePreviewer extends AppCompatImageView implements GestureDetecto
         super.computeScroll();
         Log.e("xbc", "computeScroll:" + mScroller.computeScrollOffset() + "," + mScroller.getCurrX() + "," + mScroller.getCurrY());
         if (mScroller.computeScrollOffset()) {
-            scrollTo(-mScroller.getCurrX(), -mScroller.getCurrY());
+            scrollTo(mScroller.getCurrX(), mScroller.getCurrY());
             postInvalidate();
         }
     }
